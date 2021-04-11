@@ -1,29 +1,36 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
-    <title>Secure Real-Time Multiplayer Game</title>
+    <meta charset="utf-8">
     <meta
       name="description"
       content="An example for the fCC InfoSec Secure Real-Time Multiplayer Game project"
     />
-    <meta charset="utf-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Secure Real-Time Multiplayer Game</title>
     <link rel="stylesheet" href="../public/style.css" type="text/css" />
     <link href="https://fonts.googleapis.com/css?family=Press+Start+2P&display=swap" rel="stylesheet">
     <script src="/socket.io/socket.io.js"></script>
   </head>
   <body>
+    <audio id="connected" src="../assets/sounds/connected.mp3"></audio>
+    <audio id="collision_audio" src="../assets/sounds/collision.mp3"></audio>
+    <audio id="star_pickup" src="../assets/sounds/star_pickup.mp3"></audio>
+    <img id="p_avatar" src="../assets/PNG/player.png">
+    <img id="star_png" src="../assets/PNG/star.png">
+    <img id="enemy_avatar" src="../assets/PNG/enemy_avatar.png">
+    <img id="explosion" src="../assets/PNG/collision.png">
     <header>
       <h1>Secure Real Time Multiplayer Game</h1>
     </header>
-    <hr style="margin: 25px" />
-    <div class="container">
+    <div id="game-container">
+      <h2>
+        Score: <span id="score"></span>
+        <span id="rank">Rank: 1/1</span>
+      </h2>
       <canvas 
         ref="game"
-        id="game-window" 
-        width="640" 
-        height="480"
+        id="game-window"
       >
       </canvas>
     </div>
