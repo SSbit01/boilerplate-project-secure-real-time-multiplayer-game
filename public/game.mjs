@@ -11,14 +11,8 @@ const context = canvas.getContext('2d');
 //
 const p_avatar = document.getElementById("p_avatar");
 const enemy_avatar = document.getElementById("enemy_avatar");
-p_avatar.width = enemy_avatar.width = dimensions.avatar.width;
-p_avatar.height = enemy_avatar.height = dimensions.avatar.height;
 const star_png = document.getElementById("star_png");
-star_png.width = dimensions.star.width;
-star_png.height = dimensions.star.height;
 const explosion_png = document.getElementById("explosion");
-explosion_png.width = dimensions.collision.width;
-explosion_png.height = dimensions.collision.height;
 //
 const speed = 10;
 const respawn_time = 2500; 
