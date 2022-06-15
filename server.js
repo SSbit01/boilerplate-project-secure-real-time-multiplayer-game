@@ -1,81 +1,120 @@
-require('dotenv').config();
-const express = require('express');
-const bodyParser = require('body-parser');
-const expect = require('chai');
+require("dotenv").config();
 
-const fccTestingRoutes = require('./routes/fcctesting.js');
-const runner = require('./test-runner.js');
 
-const app = express();
+const express = require("express"),
+      http = require("http"),
+      cors = require("cors"),
+      helmet = require("helmet"),
+      {Server} = require("socket.io"),
+      //
+      fccTestingRoutes = require("./routes/fcctesting.js"),
+      runner = require("./test-runner.js"),
+      //
+      Collectible = require("./public/scripts/Collectible.js").default,
+      Player = require("./public/scripts/Player.js").default,
+      //
+      app = express(),
+      server = http.createServer(app);
 
-//
-const helmet = require("helmet");
+
+app.use("/public", express.static(process.cwd() + "/public"));
+app.use("/favicon.ico", express.static("favicon.ico"));
+
+app.use(express.json());
+app.use(express.urlencoded({extended: true}));
+
+app.use(cors({origin: "*"}));
+
+app.use(helmet.noCache());
 app.use(helmet.xssFilter());
 app.use(helmet.noSniff());
-app.use(helmet.noCache());
-app.use(helmet.hidePoweredBy({setTo:"PHP 7.4.3"}));
-
-const cors = require("cors");
-app.use(cors({origin: "*"}));
-//
+app.use(helmet.hidePoweredBy({setTo: "PHP 7.4.3"}));
 
 
 //
-const dimensions = require("./public/dimensions.js").default;
-const Collectible = require("./public/Collectible.mjs");
-const http = require("http").createServer(app);
-const io = require('socket.io')(http);
+const dimensions = {
+        player: {
+          width: 32,
+          height: 32
+        },
+        star: {
+          width: 16,
+          height: 16
+        },
+        canvas: {
+          width: 800,
+          height: 600
+        },
+        burst: {
+          width: 40,
+          height: 40
+        },
+        randomX() {
+          return Math.floor(Math.random() * (this.canvas.width - Math.max(this.player.width, this.star.width)));
+        },
+        randomY() {
+          return Math.floor(Math.random() * (this.canvas.height - Math.max(this.player.height, this.star.height)));
+        }
+      },
+      //
+      io = new Server(server),
+      //
+      stars = [],
+      players = [],
+      //
+      speed = 10;
 
-let stars = [];
-for (let i=0; i < 3; i++) {
+
+for (let id = 0; id < 4; id++) {
   stars.push(
     new Collectible({
-      x: dimensions.random_x(),
-      y: dimensions.random_y(),
-      score: 1,
-      id: i
+      x: dimensions.randomX(),
+      y: dimensions.randomY(),
+      id
     })
   );
 }
 
-let players_arr = [];
+
 io.on("connection", socket => {
-  socket.emit("stars", stars);
-  socket.emit("enemies", players_arr);
-  var player_id;
-  socket.on("emit_player", player => {
-    socket.broadcast.emit("new_player", player);
-    player_id = player.id;
-    players_arr.push(player);
+  const player = new Player({
+    x: dimensions.randomX(),
+    y: dimensions.randomY(),
+    id: socket.id
   });
-  socket.on("move", player => {
-    players_arr[players_arr.findIndex(p=>p.id==player_id)] = player;
-    socket.broadcast.emit("an_enemy_has_moved", player);
+  
+  socket.emit("initial", {
+    stars,
+    enemies: players,
+    player,
+    dimensions,
+    speed
   });
-  socket.on("star_pickup", arr => {
-    let score = arr[0];
-    players_arr[players_arr.findIndex(p=>p.id==player_id)].score = score;
-    let star = arr[1];
-    stars[stars.findIndex(s=>s.id==star.id)] = star;
-    socket.broadcast.emit("an_enemy_has_collected_a_star", [{id:player_id,score:score},star]);
+
+  socket.broadcast.emit("new_enemy", player);
+
+  players.push(player);
+  
+  
+  socket.on("player_move", dir => {
+    player.movePlayer(dir, speed);
+    socket.broadcast.emit("enemy_move", {id: player.id, dir});
   });
-  socket.on("collision", () => {
-    players_arr.splice(players_arr.findIndex(p=>p.id==player_id), 1);
-    socket.broadcast.emit("an_enemy_has_disconnected", player_id);
+
+  socket.on("star_pickup", id => {
+    const star = stars.find(star => star.id == id);
+    star.x = dimensions.randomX();
+    star.y = dimensions.randomY();
+    io.emit("new_star", star);
   });
+
   socket.on("disconnect", () => {
-    console.log("a player has disconnected");
-    players_arr.splice(players_arr.findIndex(p=>p.id==player_id), 1);
-    socket.broadcast.emit("an_enemy_has_disconnected", player_id);
+    players.splice(players.indexOf(player), 1);
+    socket.broadcast.emit("enemy_disconnected", player.id);
   });
 });
 //
 
-app.use('/public', express.static(process.cwd() + '/public'));
-app.use('/assets', express.static(process.cwd() + '/assets'));
-
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
 
 // Index page (static HTML)
 app.route('/')
@@ -93,18 +132,19 @@ app.use(function(req, res, next) {
     .send('Not Found');
 });
 
+
 const portNum = process.env.PORT || 3000;
 
 // Set up server and tests
-const server = http.listen(portNum, () => {
+server.listen(portNum, () => {
   console.log(`Listening on port ${portNum}`);
-  if (process.env.NODE_ENV==='test') {
-    console.log('Running Tests...');
+  if (process.env.NODE_ENV === "test") {
+    console.log("Running Tests...");
     setTimeout(function () {
       try {
         runner.run();
       } catch (error) {
-        console.log('Tests are not valid:');
+        console.log("Tests are not valid:");
         console.error(error);
       }
     }, 1500);

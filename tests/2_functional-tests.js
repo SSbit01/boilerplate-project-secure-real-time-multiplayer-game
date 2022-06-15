@@ -14,11 +14,14 @@ const server = require('../server');
 
 chai.use(chaiHttp);
 
+const requester = chai.request(server).keepOpen();
+
+
 suite('Functional Tests', () => {
 
   suite('Headers test', () => {
     test("Prevent the client from trying to guess / sniff the MIME type.", done => {
-      chai.request(server)
+      requester
         .get('/')
         .end((err, res) => {
           assert.deepStrictEqual(res.header['x-content-type-options'], 'nosniff');
@@ -27,7 +30,7 @@ suite('Functional Tests', () => {
     });
 
     test("Prevent cross-site scripting (XSS) attacks.", done => {
-      chai.request(server)
+      requester
         .get('/')
         .end((err, res) => {
           assert.deepStrictEqual(res.header['x-xss-protection'], '1; mode=block');
@@ -36,7 +39,7 @@ suite('Functional Tests', () => {
     });
 
     test("Nothing from the website is cached in the client.", done => {
-      chai.request(server)
+      requester
         .get('/')
         .end((err, res) => {
           assert.deepStrictEqual(res.header['surrogate-control'], 'no-store');
@@ -48,7 +51,7 @@ suite('Functional Tests', () => {
     });
 
     test("The headers say that the site is powered by 'PHP 7.4.3'.", done => {
-      chai.request(server)
+      requester
         .get('/')
         .end((err, res) => {
           assert.deepStrictEqual(res.header['x-powered-by'], 'PHP 7.4.3');

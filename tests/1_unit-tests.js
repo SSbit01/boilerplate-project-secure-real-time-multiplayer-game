@@ -7,8 +7,8 @@
 *
 */
 
-import Player from '../public/Player.mjs';
-import Collectible from '../public/Collectible.mjs';
+import Player from '../public/scripts/Player.js';
+import Collectible from '../public/scripts/Collectible.js';
 const chai = require('chai');
 const assert = chai.assert;
 const { JSDOM } = require('jsdom');
