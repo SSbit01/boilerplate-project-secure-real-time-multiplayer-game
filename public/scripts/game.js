@@ -93,9 +93,9 @@ socket.on("initial", data => {
     let dir;
     if (["ArrowUp", "KeyW"].includes(code) && player.y > speed) {
       dir = "up";
-    } else if (["ArrowRight", "KeyD"].includes(code) && dimensions.canvas.width - player.x - dimensions.player.width > speed) {
+    } else if (["ArrowRight", "KeyD"].includes(code) && player.x - dimensions.canvas.width + dimensions.player.width < speed) {
       dir = "right";
-    } else if (["ArrowDown", "KeyS"].includes(code) && dimensions.canvas.height - player.y - dimensions.player.height > speed) {
+    } else if (["ArrowDown", "KeyS"].includes(code) && player.y - dimensions.canvas.height + dimensions.player.height < speed) {
       dir = "down";
     } else if (["ArrowLeft", "KeyA"].includes(code) && player.x > speed) {
       dir = "left";
