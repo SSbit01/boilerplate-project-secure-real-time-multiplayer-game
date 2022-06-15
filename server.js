@@ -103,6 +103,7 @@ io.on("connection", socket => {
 
   socket.on("star_pickup", id => {
     const star = stars.find(star => star.id == id);
+    player.score += star.value;
     star.x = dimensions.randomX();
     star.y = dimensions.randomY();
     io.emit("new_star", star);
